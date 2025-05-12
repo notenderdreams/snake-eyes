@@ -6,8 +6,9 @@ use std::time::{Duration, Instant};
 
 pub fn watch(config: Config) -> notify::Result<()> {
     let watch_dir = PathBuf::from(".");
-    let debounce_duration = Duration::from_millis(config.watch.debounce);
-    let recursive = config.watch.recursive;
+
+    let debounce_duration = Duration::from_millis(config.watch.debounce.unwrap());
+    let recursive = config.watch.recursive.unwrap();
 
     let (tx, rx) = channel();
 
@@ -27,7 +28,11 @@ pub fn watch(config: Config) -> notify::Result<()> {
 
     let mut last_event = Instant::now() - debounce_duration;
 
-    println!("Watching directory (recursive: {})", recursive);
+    println!(
+        "Watching directory (recursive: {}) and (Debounce: {})",
+        recursive,
+        debounce_duration.as_millis()
+    );
 
     loop {
         if rx.recv().is_ok() {

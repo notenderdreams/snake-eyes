@@ -6,9 +6,19 @@ use toml;
 pub fn load_config() -> Config {
     let config_file = Path::new(".sny");
 
+    let mut config = Config::default();
+
     if let Ok(contents) = fs::read_to_string(config_file) {
-        toml::from_str::<Config>(&contents).unwrap_or_default()
-    } else {
-        Config::default()
+        match toml::from_str::<Config>(&contents) {
+            Ok(parsed) => {
+                config.merge(parsed);
+            }
+            Err(e) => {
+                eprintln!("Failed to parse config: {}", e);
+                return Config::default();
+            }
+        }
     }
+
+    config
 }
