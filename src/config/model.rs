@@ -1,29 +1,22 @@
 use serde::Deserialize;
 
-#[derive(Debug,Deserialize)]
+#[derive(Debug, Deserialize, Default)]
 pub struct Config {
-    pub watch : WatchConfig,
+    pub watch: WatchConfig,
 }
 
-
-#[derive(Debug,Deserialize)]
-pub struct WatchConfig{
+//Actual Config
+#[derive(Debug, Deserialize)]
+pub struct WatchConfig {
     pub recursive: bool,
+    pub debounce: u64,
 }
-
-impl Default for Config {
-    fn default() -> Self {
-        Self {
-            watch: WatchConfig::default(),
-        }
-    }
-}
-
 
 impl Default for WatchConfig {
     fn default() -> Self {
         Self {
             recursive: true,
+            debounce: 500,
         }
     }
 }

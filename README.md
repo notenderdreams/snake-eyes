@@ -1,0 +1,1 @@
+-[ ] Make the properties optional 

@@ -1,2 +1,3 @@
 [watch]
 recursive = false                           # Watch subdirectories
+debounce = 10000                # Delay before running the command

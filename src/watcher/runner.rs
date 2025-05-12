@@ -1,28 +1,21 @@
-use notify::{
-    RecommendedWatcher,
-    RecursiveMode,
-    Watcher
-};
+use crate::config::model::Config;
+use notify::{RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
-use std::time::{
-    Duration,
-    Instant 
-};
+use std::time::{Duration, Instant};
 
-
-
-pub fn watch(recursive: bool) -> notify::Result<()> {
+pub fn watch(config: Config) -> notify::Result<()> {
     let watch_dir = PathBuf::from(".");
-    let debounce_duration = Duration::from_millis(1000);
+    let debounce_duration = Duration::from_millis(config.watch.debounce);
+    let recursive = config.watch.recursive;
+
     let (tx, rx) = channel();
 
-    let mut watcher: RecommendedWatcher =
-        notify::recommended_watcher(move |res| {
-            if let Ok(_event) = res {
-                let _ = tx.send(());
-            }
-        })?;
+    let mut watcher: RecommendedWatcher = notify::recommended_watcher(move |res| {
+        if let Ok(_event) = res {
+            let _ = tx.send(());
+        }
+    })?;
 
     let mode = if recursive {
         RecursiveMode::Recursive
@@ -34,13 +27,15 @@ pub fn watch(recursive: bool) -> notify::Result<()> {
 
     let mut last_event = Instant::now() - debounce_duration;
 
-    println!("(recursive: {})", recursive);
+    println!("Watching directory (recursive: {})", recursive);
 
     loop {
-        if let Ok(_) = rx.recv() {
+        if rx.recv().is_ok() {
             let now = Instant::now();
+
             if now.duration_since(last_event) >= debounce_duration {
                 println!("Change detected at {:?}", now);
+
                 last_event = now;
             }
         }
