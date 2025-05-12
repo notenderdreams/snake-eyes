@@ -1,1 +1,1 @@
--[ ] Make the properties optional 
+-[x] Make the properties optional 
