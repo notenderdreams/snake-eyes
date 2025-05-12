@@ -1,1 +1,5 @@
--[x] Make the properties optional 
+-[x] logger 
+-[ ] ignore 
+-[ ] execs 
+-[ ] custom commands  
+-[ ] templates

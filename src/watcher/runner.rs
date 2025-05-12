@@ -1,5 +1,6 @@
 use crate::config::model::Config;
-use notify::{RecommendedWatcher, RecursiveMode, Watcher};
+use crate::logger::{FileChangeType, Logger};
+use notify::{EventKind, RecommendedWatcher, RecursiveMode, Watcher};
 use std::path::PathBuf;
 use std::sync::mpsc::channel;
 use std::time::{Duration, Instant};
@@ -13,8 +14,8 @@ pub fn watch(config: Config) -> notify::Result<()> {
     let (tx, rx) = channel();
 
     let mut watcher: RecommendedWatcher = notify::recommended_watcher(move |res| {
-        if let Ok(_event) = res {
-            let _ = tx.send(());
+        if let Ok(event) = res {
+            let _ = tx.send(event);
         }
     })?;
 
@@ -28,20 +29,31 @@ pub fn watch(config: Config) -> notify::Result<()> {
 
     let mut last_event = Instant::now() - debounce_duration;
 
-    println!(
-        "Watching directory (recursive: {}) and (Debounce: {})",
-        recursive,
-        debounce_duration.as_millis()
-    );
+    Logger::init();
 
     loop {
-        if rx.recv().is_ok() {
+        if let Ok(event) = rx.recv() {
             let now = Instant::now();
 
             if now.duration_since(last_event) >= debounce_duration {
-                println!("Change detected at {:?}", now);
-
                 last_event = now;
+
+                for path in event.paths {
+                    let file_path = path.display().to_string();
+
+                    match event.kind {
+                        EventKind::Create(_) => {
+                            Logger::file_event(FileChangeType::Created, &file_path);
+                        }
+                        EventKind::Modify(_) => {
+                            Logger::file_event(FileChangeType::Modified, &file_path);
+                        }
+                        EventKind::Remove(_) => {
+                            Logger::file_event(FileChangeType::Deleted, &file_path);
+                        }
+                        _ => {}
+                    }
+                }
             }
         }
     }
